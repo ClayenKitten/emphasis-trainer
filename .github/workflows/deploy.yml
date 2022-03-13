@@ -1,0 +1,42 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run tests
+      run: cargo test --verbose
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Setup wasm32-unknown-unknown
+      run: rustup target add wasm32-unknown-unknown
+      
+    - name: Setup trunk
+      uses: jetli/trunk-action@v0.1.0
+      with:
+        version: 'latest'
+    
+    - name: Build
+      run: trunk build --release
+    
+    - name: Deploy
+      uses: s0/git-publish-subdir-action@develop
+      env:
+        REPO: self
+        BRANCH: gh-pages
+        FOLDER: dist
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+   
+    
