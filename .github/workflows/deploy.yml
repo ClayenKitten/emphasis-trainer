@@ -9,17 +9,22 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Run tests
-      run: cargo test --verbose
   deploy:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
     
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      
     - name: Setup wasm32-unknown-unknown
       run: rustup target add wasm32-unknown-unknown
       
