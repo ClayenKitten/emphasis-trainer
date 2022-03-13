@@ -39,9 +39,10 @@ impl Component for FailureCard {
         html! {
             <>
                 <div class="panel-block failure">
-                    <b class="failure-explanation">{&ctx.props().word}</b>
+                    <b class="failure-word">{&ctx.props().word}</b>
                 </div>
                 {seealso(ctx)}
+                {explanation(ctx)}
                 <div class="panel-block">
                     <button class="button is-primary is-fullwidth" onclick={on_continue} >
                     {"Продолжить"}
@@ -90,5 +91,19 @@ fn seealso(ctx: &Context<FailureCard>) -> Html {
                 }
             </div>
         }
+    }
+}
+
+fn explanation(ctx: &Context<FailureCard>) -> Html {
+    if let Some(explanation) = &ctx.props().word.explanation {
+        html! {
+            <div class="panel-block failure-explanation">
+                <div>
+                    <p>{explanation}</p>
+                </div>
+            </div>
+        }
+    } else {
+        html!()
     }
 }

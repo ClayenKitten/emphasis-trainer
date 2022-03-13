@@ -12,15 +12,14 @@ use self::parse::ParseError;
 pub struct Model {
     cur: usize,
     words: Vec<Word>,
-    explanations: Vec<Explanation>,
 }
 
 impl Model {
     /// Create new model.
     pub fn new() -> Result<Self, Vec<ParseError>> {
         let data = include_str!("./data.txt");
-        let (words, explanations) = parse::parse(data)?;
-        Ok(Model { cur: 0, words, explanations })
+        let words = parse::parse(data)?;
+        Ok(Model { cur: 0, words })
     }
 
     /// Get new word.
@@ -69,7 +68,7 @@ pub struct Word {
     /// Words with same seealso value are shown after failure.
     pub group: Option<(bool, u64)>,
     /// Explanation with presented tag shown after failute.
-    pub explanation: Option<u64>
+    pub explanation: Option<String>,
 }
 
 impl Word {
@@ -93,8 +92,8 @@ impl Word {
         self
     }
 
-    pub fn with_explanation(mut self, tag: &str) -> Self {
-        self.explanation = Some(fxhash::hash64(&tag.to_lowercase()));
+    pub fn with_explanation(mut self, explanation: impl ToString) -> Self {
+        self.explanation = Some(explanation.to_string());
         self
     }
 
@@ -138,25 +137,5 @@ impl Display for Variant {
         } else {
             write!(f, "{}", word)
         }
-    }
-}
-
-/// Binding between tag and text explaining accentuation.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Explanation {
-    tag: u64,
-    text: String,
-}
-
-impl Explanation {
-    pub fn new(tag: &str, text: impl ToString) -> Self {
-        Explanation {
-            tag: fxhash::hash64(&tag.to_lowercase()),
-            text: text.to_string(),
-        }
-    }
-
-    pub fn text(&self) -> &str {
-        self.text.as_str()
     }
 }
