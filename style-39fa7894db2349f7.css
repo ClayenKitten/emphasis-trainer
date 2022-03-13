@@ -40,6 +40,12 @@ footer {
     flex: 1;
 }
 
+@media(pointer: none) {
+    .panel-block > button {
+        outline: 0;
+    }
+}
+
 
 .panel-block.failure {
     display: flex;
