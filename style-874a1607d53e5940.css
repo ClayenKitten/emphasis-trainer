@@ -21,7 +21,7 @@ footer {
 
 .mycard {
     min-width: 300px;
-    max-width: max(400px, 40vw);
+    max-width: min(1000px, 90vw);
 }
 
 /* Panel header */
@@ -48,7 +48,7 @@ footer {
     justify-content: center;
 }
 
-.failure-explanation {
+.failure-word {
     font-size: xx-large;
 }
 
@@ -63,7 +63,7 @@ footer {
     font-weight: 100;
 }
 
-.failure-seealso>div {
+.failure-seealso>div, .failure-explanation>div {
     flex: 1;
     display: flex;
     flex-wrap: wrap;
