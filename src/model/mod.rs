@@ -131,7 +131,8 @@ pub struct Variant {
 
 impl Display for Variant {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let word = util::uppercase_letter(&self.word, self.emphasis);
+        let word = self.word.replace('ё', "е");
+        let word = util::uppercase_letter(&word, self.emphasis);
         if let Some(detail) = &self.detail {
             write!(f, "{} {}", word, detail)
         } else {
