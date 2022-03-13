@@ -9,15 +9,19 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run tests
+      run: cargo test --verbose
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
     
-    - name: Run tests
-      run: cargo test --verbose
+    - name: Setup wasm32-unknown-unknown
+      run: rustup target add wasm32-unknown-unknown
       
     - name: Setup trunk
       uses: jetli/trunk-action@v0.1.0
