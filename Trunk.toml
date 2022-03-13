@@ -2,4 +2,4 @@
 target = "index.html"
 release = true
 dist = "dist"
-public_url = "/emphasis-trainer"
+public_url = "/emphasis-trainer/"
