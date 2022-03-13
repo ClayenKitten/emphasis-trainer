@@ -40,7 +40,7 @@ footer {
     flex: 1;
 }
 
-@media(pointer: none) {
+@media (hover: none) and (not (pointer: fine)) {
     .panel-block > button {
         outline: 0;
     }
