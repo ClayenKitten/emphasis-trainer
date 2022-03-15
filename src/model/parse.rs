@@ -1,15 +1,13 @@
 use std::{str::FromStr, collections::HashMap};
 
-use Either::{Left, Right};
-use either::Either;
 use thiserror::Error;
 
 use crate::util;
 
 use super::Word;
 
-pub fn parse(s: &str) -> Result<Vec<Word>, Vec<ParseError>> {
-    let mut words = Vec::new();
+pub fn parse(s: &str) -> (Vec<Word>, Vec<ParseError>) {
+    let mut words = Vec::with_capacity(s.lines().count());
     let mut explanations = HashMap::new();
     let mut errors = Vec::new();
     for (line, text) in s.lines().enumerate() {
@@ -21,31 +19,31 @@ pub fn parse(s: &str) -> Result<Vec<Word>, Vec<ParseError>> {
             }
         }
     }
-    if errors.is_empty() {
-        Ok(words)
-    } else {
-        Err(errors)
-    }
+    (words, errors)
 }
 
 fn parse_line(line: usize, text: &str, explanations: &HashMap<String, String>) -> Option<ParseResult> {
     let text = text.trim();
-    if text.is_empty() || text.starts_with("//") {
+    if !should_parse(text) {
         return None;
     }
     let res = match text.strip_prefix('>') {
         Some(text) => {
             Explanation::from_str(text.trim_start())
-                .map_err(|source| ParseError { line, source: Right(source) })
+                .map_err(|source| ParseError::new_explanation(line, source))
                 .into()
         }
         None => {
             parse_word(text, explanations)
-                .map_err(|source| ParseError { line, source: Left(source) })
+                .map_err(|source| ParseError::new_word(line, source))
                 .into()
         }
     };
     Some(res)
+}
+
+fn should_parse(s: &str) -> bool {
+    !s.is_empty() && !s.starts_with("//")
 }
 
 fn parse_word(line: &str, explanations: &HashMap<String, String>) -> Result<Word, WordParseError> {
@@ -62,6 +60,9 @@ fn parse_word(line: &str, explanations: &HashMap<String, String>) -> Result<Word
             word = word.with_detail(&detail);
         }
         // Group
+        if left.chars().filter(|c| [':', '!'].contains(c)).count() > 1 {
+            return Err(WordParseError::MoreThanOneGroup(word.word));
+        }
         if let Some(group) = util::subslice_tags(left, &[':', '!'], &['>', '<']) {
             let inverted = left.contains('!');
             word = word.with_group(group.trim(), inverted)
@@ -73,7 +74,7 @@ fn parse_word(line: &str, explanations: &HashMap<String, String>) -> Result<Word
                 if let Some(exp) = explanations.get(&exp_tag) {
                     word = word.with_explanation(exp.trim());
                 } else {
-                    return Err(WordParseError::ExplanationNotDefined(exp_tag));
+                    return Err(WordParseError::ExplanationNotDefined { tag: exp_tag, word: word.word });
                 }
             }
             None => {
@@ -116,10 +117,20 @@ impl Into<ParseResult> for Result<Explanation, ParseError> {
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
-#[error("{}: {}", line, source)]
-pub struct ParseError {
-    pub line: usize,
-    pub source: Either<WordParseError, ExplanationParseError>,
+#[error("Line {}: {}", line, inner)]
+pub enum ParseError {
+    WordParseError { line: usize, inner: WordParseError },
+    ExplanationParseError { line: usize, inner: ExplanationParseError },
+}
+
+impl ParseError {
+    pub fn new_word(line: usize, inner: WordParseError) -> ParseError {
+        ParseError::WordParseError { line, inner }
+    }
+
+    pub fn new_explanation(line: usize, inner: ExplanationParseError) -> ParseError {
+        ParseError::ExplanationParseError { line, inner }
+    }    
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -130,12 +141,14 @@ pub enum ExplanationParseError {
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum WordParseError {
-    #[error("Word must contain emphasis specified by uppercase letter; `{0}` has no emphasis.")]
+    #[error("Word must contain emphasis specified by uppercase letter; Word `{0}` has no emphasis.")]
     EmphasisNotFound(String),
-    #[error("Currently only one group allowed.")]
-    MoreThanOneGroup,
-    #[error("Explanation tag `{0}` not defined.")]
-    ExplanationNotDefined(String),
+    #[error("Word `{0}` has multiple groups defined. Currently only one group allowed.")]
+    MoreThanOneGroup(String),
+    #[error("Explanation tag `{tag}` for `{word}` not defined.")]
+    ExplanationNotDefined {tag: String, word: String },
+    #[error("Explanation tag not found although it was expected.")]
+    NoExplanationTag,
     #[error("Explanation can't be empty.")]
     ExplanationEmpty,
 }
@@ -147,26 +160,16 @@ struct Explanation {
     text: String,
 }
 
-impl Explanation {
-    pub fn new(tag: &str, text: impl ToString) -> Self {
-        Explanation {
-            tag: tag.trim().to_lowercase(),
-            text: text.to_string(),
-        }
-    }
-
-    pub fn text(&self) -> &str {
-        self.text.as_str()
-    }
-}
-
 impl FromStr for Explanation {
     type Err = ExplanationParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {    
         let (tag, text) = s.split_once(':')
             .ok_or(ExplanationParseError::DelimiterNotFound)?;
-        Ok(Explanation::new(tag, text.trim()))
+        Ok(Explanation {
+            tag: tag.trim().to_lowercase(),
+            text: text.trim().to_string(),
+        })
     }
 }
 
@@ -180,11 +183,12 @@ mod test {
         отзЫв (посла)
         Отзыв (о книге)
         ";
-        let correct = Ok(
+        let correct = (
             vec![
                 Word::new("отзыв", 3).with_detail("(посла)"),
                 Word::new("отзыв", 0).with_detail("(о книге)"),
             ],
+            Vec::new(),
         );
         assert_eq!(parse(data), correct);
     }
@@ -196,12 +200,13 @@ mod test {
         газопровОд : ПРОВОД
         нефтепровОд : ПРОВОД
         ";
-        let correct = Ok(
+        let correct = (
             vec![
                 Word::new("водопровод", 8).with_group("ПРОВОД", false),
                 Word::new("газопровод", 8).with_group("ПРОВОД", false),
                 Word::new("нефтепровод", 9).with_group("ПРОВОД", false),
             ],
+            Vec::new(),
         );
         assert_eq!(parse(data), correct);
     }
@@ -212,10 +217,11 @@ mod test {
         > ПРОВЕРКА: Просто проверка работоспособности.
         слОво > ПРОВЕРКА
         ";
-        let correct = Ok(
+        let correct = (
             vec![
                 Word::new("слово", 2).with_explanation("Просто проверка работоспособности."),
             ],
+            Vec::new(),
         );
         assert_eq!(parse(data), correct);
     }

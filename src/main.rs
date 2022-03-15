@@ -1,7 +1,8 @@
 use std::time::Duration;
 
+use gloo::console;
 use gloo::timers::callback::Interval;
-use model::{Model, Variant, Word};
+use model::{Model, Variant, Word, ParseError};
 use question::QuestionCard;
 use yew::prelude::*;
 
@@ -46,7 +47,8 @@ impl Component for App {
             callback.emit(());
         })
         .forget();
-        let model = Model::new().expect("Couldn't create model.");
+        let (model, errors) = Model::new();
+        log_errors(errors);
         let word = model.next();
         let variants = word.variants();
         App {
@@ -121,6 +123,19 @@ impl Component for App {
                     </div>
                 </footer>
             </>
+        }
+    }
+}
+
+fn log_errors(errors: Vec<ParseError>) {
+    match errors.len() {
+        0 => console::log!("Word data loaded with no errors."),
+        n => {
+            console::group!(collapsed format!("Word data loaded with {n} errors."));
+            for error in errors {
+                console::error!(error.to_string());
+            }
+            console::group_end!();
         }
     }
 }

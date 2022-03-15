@@ -6,7 +6,7 @@ use rand::Rng;
 
 use crate::util;
 
-use self::parse::ParseError;
+pub use self::parse::ParseError;
 
 /// Struct that manages whole logic of trainer.
 pub struct Model {
@@ -16,10 +16,10 @@ pub struct Model {
 
 impl Model {
     /// Create new model.
-    pub fn new() -> Result<Self, Vec<ParseError>> {
+    pub fn new() -> (Self, Vec<ParseError>) {
         let data = include_str!("./data.txt");
-        let words = parse::parse(data)?;
-        Ok(Model { cur: 0, words })
+        let (words, errors) = parse::parse(data);
+        (Model { cur: 0, words }, errors)
     }
 
     /// Get new word.
