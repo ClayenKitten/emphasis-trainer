@@ -15,3 +15,4 @@ gloo = "0.6.1"
 wasm-bindgen = "0.2.79"
 web-sys = { version = "0.3.56", features = ["HtmlButtonElement"] }
 fxhash = "0.2.1"
+indexmap = "1.8.0"

@@ -1,17 +1,18 @@
 mod parse;
+mod statistics;
+mod variant;
+mod word;
 
-use std::fmt::Display;
-
+use indexmap::IndexMap;
 use rand::Rng;
 
-use crate::util;
-
 pub use self::parse::ParseError;
+pub use self::{word::{Word, WordHash}, variant::Variant};
 
 /// Struct that manages whole logic of trainer.
 pub struct Model {
-    cur: usize,
-    words: Vec<Word>,
+    latest: Option<WordHash>,
+    words: IndexMap<WordHash, Word>,
 }
 
 impl Model {
@@ -19,7 +20,15 @@ impl Model {
     pub fn new() -> (Self, Vec<ParseError>) {
         let data = include_str!("./data.txt");
         let (words, errors) = parse::parse(data);
-        (Model { cur: 0, words }, errors)
+        let words = words.into_iter()
+            .map(|word| (WordHash::from(&word), word))
+            .collect();
+        
+        let model = Model {
+            latest: None,
+            words,
+        };
+        (model, errors)
     }
 
     /// Get new word.
@@ -35,7 +44,7 @@ impl Model {
             Some(group) => group,
             None => return Vec::new(),
         };
-        self.words.iter()
+        self.words.values()
             .filter(|w| w.group.map(|g| g == group).unwrap_or(false))
             .map(|w| w.clone())
             .filter(|w| w != word)
@@ -48,94 +57,10 @@ impl Model {
             Some(group) => group,
             None => return Vec::new(),
         };
-        self.words.iter()
+        self.words.values()
             .filter(|w| w.group.map(|g| g.0 == !group.0 && g.1 == group.1).unwrap_or(false))
             .map(|w| w.clone())
             .filter(|w| w != word)
             .collect()
-    }
-}
-
-/// Correct way to set emphasis at `word`.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Word {
-    /// Word in lowercase.
-    pub word: String,
-    /// Detail that defines correct emphasis.
-    pub detail: Option<String>,
-    /// Position of correct emphasis.
-    pub emphasis: usize,
-    /// Words with same seealso value are shown after failure.
-    pub group: Option<(bool, u64)>,
-    /// Explanation with presented tag shown after failute.
-    pub explanation: Option<String>,
-}
-
-impl Word {
-    pub fn new(word: &str, emphasis: usize) -> Self {
-        Word {
-            word: word.to_lowercase(),
-            detail: None,
-            emphasis,
-            group: None,
-            explanation: None,
-        }
-    }
-    
-    pub fn with_detail(mut self, detail: &str) -> Self {
-        self.detail = Some(detail.trim().to_string());
-        self
-    }
-    
-    pub fn with_group(mut self, group: &str, inverted: bool) -> Self {
-        self.group = Some((inverted, fxhash::hash64(&group.to_lowercase())));
-        self
-    }
-
-    pub fn with_explanation(mut self, explanation: impl ToString) -> Self {
-        self.explanation = Some(explanation.to_string());
-        self
-    }
-
-    pub fn variants(&self) -> Vec<Variant> {
-        util::get_vowel_positions(&self.word)
-            .into_iter()
-            .map(|emphasis| Variant {
-                emphasis,
-                word: self.word.clone(),
-                detail: self.detail.clone(),
-            })
-            .collect()
-    }
-}
-
-impl Display for Word {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let word = util::uppercase_letter(&self.word, self.emphasis);
-        if let Some(detail) = &self.detail {
-            write!(f, "{} {}", word, detail)
-        } else {
-            write!(f, "{}", word)
-        }
-    }
-}
-
-/// Variant is possibly incorrect way of setting emphasis at word.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Variant {
-    pub emphasis: usize,
-    pub word: String,
-    pub detail: Option<String>,
-}
-
-impl Display for Variant {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let word = self.word.replace('ё', "е");
-        let word = util::uppercase_letter(&word, self.emphasis);
-        if let Some(detail) = &self.detail {
-            write!(f, "{} {}", word, detail)
-        } else {
-            write!(f, "{}", word)
-        }
     }
 }
