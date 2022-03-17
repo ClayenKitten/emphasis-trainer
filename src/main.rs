@@ -47,7 +47,7 @@ impl Component for App {
             callback.emit(());
         })
         .forget();
-        let (model, errors) = Model::new();
+        let (mut model, errors) = Model::new();
         log_errors(errors);
         let word = model.next();
         let variants = word.variants();

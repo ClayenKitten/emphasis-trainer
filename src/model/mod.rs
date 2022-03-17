@@ -32,10 +32,18 @@ impl Model {
     }
 
     /// Get new word.
-    pub fn next(&self) -> Word {
+    pub fn next(&mut self) -> Word {
         let mut rng = rand::thread_rng();
-        let i: usize = rng.gen_range(0..self.words.len());
-        self.words[i].clone()
+        loop {
+            let i: usize = rng.gen_range(0..self.words.len());
+            let word = &self.words[i];
+            if self.latest != Some(word.hash()) {
+                self.latest = Some(word.hash());
+                return word.to_owned();
+            } else {
+                continue;
+            }
+        }
     }
 
     /// Get words with the same group and rule.
@@ -62,5 +70,28 @@ impl Model {
             .map(|w| w.clone())
             .filter(|w| w != word)
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::Model;
+
+    #[test]
+    fn test_all_data_loaded_correctly() {
+        let (_, errors) = Model::new();
+        assert!(errors.is_empty());
+    }
+
+    /// Test that word isn't shown twice in a row.
+    #[test]
+    fn test_words_dont_repeat() {
+        let (mut model, _) = Model::new();
+        let mut last = None;
+        for _ in 0..5000 {
+            let word = model.next();
+            assert_ne!(Some(word.clone()), last);
+            last = Some(word);
+        }
     }
 }
