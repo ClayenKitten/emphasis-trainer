@@ -61,7 +61,7 @@ fn parse_word(line: &str, explanations: &HashMap<String, String>) -> Result<Word
         }
         // Group
         if left.chars().filter(|c| [':', '!'].contains(c)).count() > 1 {
-            return Err(WordParseError::MoreThanOneGroup(word.word));
+            return Err(WordParseError::MoreThanOneGroup(word.inner().to_owned()));
         }
         if let Some(group) = util::subslice_tags(left, &[':', '!'], &['>', '<']) {
             let inverted = left.contains('!');
@@ -74,7 +74,7 @@ fn parse_word(line: &str, explanations: &HashMap<String, String>) -> Result<Word
                 if let Some(exp) = explanations.get(&exp_tag) {
                     word = word.with_explanation(exp.trim());
                 } else {
-                    return Err(WordParseError::ExplanationNotDefined { tag: exp_tag, word: word.word });
+                    return Err(WordParseError::ExplanationNotDefined { tag: exp_tag, word: word.inner().to_owned() });
                 }
             }
             None => {

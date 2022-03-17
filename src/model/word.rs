@@ -7,8 +7,10 @@ use super::variant::Variant;
 /// Correct way to set emphasis at `word`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Word {
+    /// Preevaluated hash of word.
+    hash: WordHash,
     /// Word in lowercase.
-    pub word: String,
+    inner: String,
     /// Detail that defines correct emphasis.
     pub detail: Option<String>,
     /// Position of correct emphasis.
@@ -21,8 +23,10 @@ pub struct Word {
 
 impl Word {
     pub fn new(word: &str, emphasis: usize) -> Self {
+        let word = word.to_lowercase();
         Word {
-            word: word.to_lowercase(),
+            hash: WordHash::new(&word.to_lowercase()),
+            inner: word.to_lowercase(),
             detail: None,
             emphasis,
             group: None,
@@ -45,17 +49,22 @@ impl Word {
         self
     }
 
-    /// Get inner word in lowercase without any details etc.
+    /// Get inner word in lowercase. Use `to_string` to get string with emphasis uppercased.
     pub fn inner(&self) -> &str {
-        &self.word
+        &self.inner
+    }
+
+    /// Get hash of word.
+    pub fn hash(&self) -> WordHash {
+        self.hash
     }
 
     pub fn variants(&self) -> Vec<Variant> {
-        util::get_vowel_positions(&self.word)
+        util::get_vowel_positions(&self.inner)
             .into_iter()
             .map(|emphasis| Variant {
                 emphasis,
-                word: self.word.clone(),
+                word: self.inner.clone(),
                 detail: self.detail.clone(),
             })
             .collect()
@@ -64,7 +73,7 @@ impl Word {
 
 impl Display for Word {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let word = util::uppercase_letter(&self.word, self.emphasis);
+        let word = util::uppercase_letter(&self.inner, self.emphasis);
         if let Some(detail) = &self.detail {
             write!(f, "{} {}", word, detail)
         } else {
@@ -76,8 +85,14 @@ impl Display for Word {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WordHash(u64);
 
+impl WordHash {
+    fn new(word: &str) -> Self {
+        Self(fxhash::hash64(word))
+    }
+}
+
 impl From<&Word> for WordHash {
     fn from(val: &Word) -> Self {
-        Self(fxhash::hash64(&val.word))
+        Self::new(&val.inner)
     }
 }
