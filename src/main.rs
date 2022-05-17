@@ -118,10 +118,14 @@ impl Component for App {
                 </main>
                 <footer>
                     <div class="content has-text-centered">
-                        <p>
-                            <strong>{"Emphasis trainer"}</strong>{" by "}<a href="https://lowlevelvirtualman.com">{"LowLevelVirtualMan"}</a>{"."}
-                            {"The source code is licensed "}<a href="http://opensource.org/licenses/mit-license.php">{"MIT"}</a>{"."}
-                        </p>
+                        <span>
+                            <strong>{"Emphasis trainer"}</strong>{" by "}<a href="https://github.com/LowLevelVirtualMan">{"LowLevelVirtualMan"}</a>
+                            {", "}<a href="http://opensource.org/licenses/mit-license.php">{"MIT"}</a>{" licensed."}
+                        </span>
+                        <br/>
+                        <span class="is-clipped">
+                            {format!("Version {} built {} {}", env!("VERGEN_BUILD_SEMVER"), env!("VERGEN_BUILD_DATE"), env!("VERGEN_BUILD_TIME"))}
+                        </span>
                     </div>
                 </footer>
             </>
