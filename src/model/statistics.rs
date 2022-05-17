@@ -44,8 +44,9 @@ impl Stats {
     }
 
     /// Get a following word to train by.
-    pub fn next(&self) -> WordHash {
-        if let Some(word) = self.0.keys().choose(&mut rand::thread_rng()) {
+    pub fn next(&mut self) -> WordHash {
+        if let Some((word, record)) = self.0.iter_mut().choose(&mut rand::thread_rng()) {
+            record.occured();
             *word
         } else {
             panic!("Word list is empty.");
