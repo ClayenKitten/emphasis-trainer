@@ -1,4 +1,6 @@
-use std::{fmt::Display, hash::Hash};
+use std::{fmt::Display, hash::Hash, str::FromStr, num::ParseIntError};
+
+use serde::{Serialize, Deserialize};
 
 use crate::util;
 
@@ -82,7 +84,8 @@ impl Display for Word {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct WordHash(u64);
 
 impl WordHash {
@@ -94,5 +97,20 @@ impl WordHash {
 impl From<&Word> for WordHash {
     fn from(val: &Word) -> Self {
         Self::new(&val.inner)
+    }
+}
+
+impl Display for WordHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl FromStr for WordHash {
+    type Err = ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let val: u64 = s.parse()?;
+        Ok(WordHash(val))
     }
 }
