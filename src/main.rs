@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use gloo::console;
 use gloo::timers::callback::Interval;
-use model::{Model, Variant, Word, ParseError};
+use model::{Model, Variant, Word, ParseError, CardResult};
 use question::QuestionCard;
 use yew::prelude::*;
 
@@ -66,14 +66,16 @@ impl Component for App {
                 self.time += Duration::from_secs(1);
             }
             Msg::Failure(word) => {
+                self.model.stats.passed(word.hash(), CardResult::Failed);
                 self.header_color = "is-danger";
                 self.stage = Stage::Failure(word);
             }
-            Msg::Success(_word) => {
+            Msg::Success(word) => {
+                self.model.stats.passed(word.hash(), CardResult::Solved);
                 self.words += 1;
                 ctx.link().send_message(Msg::NextWord);
             }
-            Msg::NextWord => {               
+            Msg::NextWord => {
                 self.header_color = "";
                 let word = self.model.next();
                 let variants = word.variants();

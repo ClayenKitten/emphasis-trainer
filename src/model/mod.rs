@@ -4,13 +4,14 @@ mod variant;
 mod word;
 
 use indexmap::IndexMap;
-use rand::Rng;
 
 pub use self::parse::ParseError;
+use self::statistics::Stats;
 pub use self::{word::{Word, WordHash}, variant::Variant};
 
 /// Struct that manages whole logic of trainer.
 pub struct Model {
+    pub stats: Stats,
     latest: Option<WordHash>,
     words: IndexMap<WordHash, Word>,
 }
@@ -20,11 +21,19 @@ impl Model {
     pub fn new() -> (Self, Vec<ParseError>) {
         let data = include_str!("./data.txt");
         let (words, errors) = parse::parse(data);
+        
+        let stats = Stats::new(
+            words
+                .iter()
+                .map(|w| w.hash())
+                .collect()
+        );
         let words = words.into_iter()
             .map(|word| (WordHash::from(&word), word))
             .collect();
         
         let model = Model {
+            stats,
             latest: None,
             words,
         };
@@ -33,15 +42,15 @@ impl Model {
 
     /// Get new word.
     pub fn next(&mut self) -> Word {
-        let mut rng = rand::thread_rng();
-        loop {
-            let i: usize = rng.gen_range(0..self.words.len());
-            let word = &self.words[i];
-            if self.latest != Some(word.hash()) {
-                self.latest = Some(word.hash());
-                return word.to_owned();
-            } else {
-                continue;
+        if self.words.len() < 2 {
+            let key = self.stats.next();
+            self.words.get(&key).unwrap().clone()
+        } else {
+            loop {
+                let key = self.stats.next();
+                if Some(key) != self.latest {
+                    break self.words.get(&key).unwrap().clone();
+                }
             }
         }
     }
@@ -54,7 +63,7 @@ impl Model {
         };
         self.words.values()
             .filter(|w| w.group.map(|g| g == group).unwrap_or(false))
-            .map(|w| w.clone())
+            .cloned()
             .filter(|w| w != word)
             .collect()
     }
@@ -67,10 +76,16 @@ impl Model {
         };
         self.words.values()
             .filter(|w| w.group.map(|g| g.0 == !group.0 && g.1 == group.1).unwrap_or(false))
-            .map(|w| w.clone())
+            .cloned()
             .filter(|w| w != word)
             .collect()
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CardResult {
+    Solved,
+    Failed,
 }
 
 #[cfg(test)]

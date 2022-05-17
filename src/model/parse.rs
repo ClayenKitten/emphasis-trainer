@@ -98,18 +98,18 @@ enum ParseResult {
     Error(ParseError),
 }
 
-impl Into<ParseResult> for Result<Word, ParseError> {
-    fn into(self) -> ParseResult {
-        match self {
+impl From<Result<Word, ParseError>> for ParseResult {
+    fn from(val: Result<Word, ParseError>) -> Self {
+        match val {
             Ok(w) => ParseResult::Word(w),
             Err(e) => ParseResult::Error(e),
         }
     }
 }
 
-impl Into<ParseResult> for Result<Explanation, ParseError> {
-    fn into(self) -> ParseResult {
-        match self {
+impl From<Result<Explanation, ParseError>> for ParseResult {
+    fn from(val: Result<Explanation, ParseError>) -> Self {
+        match val {
             Ok(exp) => ParseResult::Explanation(exp.tag, exp.text),
             Err(e) => ParseResult::Error(e),
         }
