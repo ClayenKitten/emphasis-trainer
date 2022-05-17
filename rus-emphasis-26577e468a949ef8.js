@@ -211,7 +211,7 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     return real;
 }
 function __wbg_adapter_26(arg0, arg1) {
-    wasm._dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h21613c8172da232e(arg0, arg1);
+    wasm._dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hf0d798451c3b0218(arg0, arg1);
 }
 
 function makeClosure(arg0, arg1, dtor, f) {
@@ -304,7 +304,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('rus-emphasis-c9fe7bba3cfbeb77_bg.wasm', import.meta.url);
+        input = new URL('rus-emphasis-26577e468a949ef8_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
@@ -654,8 +654,8 @@ async function init(input) {
         var ret = makeMutClosure(arg0, arg1, 52, __wbg_adapter_26);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper653 = function(arg0, arg1, arg2) {
-        var ret = makeClosure(arg0, arg1, 216, __wbg_adapter_29);
+    imports.wbg.__wbindgen_closure_wrapper648 = function(arg0, arg1, arg2) {
+        var ret = makeClosure(arg0, arg1, 212, __wbg_adapter_29);
         return addHeapObject(ret);
     };
 
