@@ -124,7 +124,7 @@ impl Component for App {
                 <footer>
                     <div class="content has-text-centered">
                         <span>
-                            <strong>{"Emphasis trainer"}</strong>{" by "}<a href="https://github.com/LowLevelVirtualMan">{"LowLevelVirtualMan"}</a>
+                            <strong>{"Emphasis trainer"}</strong>{" by "}<a href="https://github.com/ClayenKitten">{"ClayenKitten"}</a>
                             {", "}<a href="http://opensource.org/licenses/mit-license.php">{"MIT"}</a>{" licensed."}
                         </span>
                         <br/>
