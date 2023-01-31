@@ -31,9 +31,7 @@ pub fn first_uppercase_position(s: &str) -> Option<usize> {
 /// Get subslice of str between tags.
 pub fn subslice_tags(s: &str, opening: &[char], closing: &[char]) -> Option<String> {
     let s: String = if opening.is_empty() {
-        s.chars()
-            .take_while(|c| !closing.contains(c))
-            .collect()
+        s.chars().take_while(|c| !closing.contains(c)).collect()
     } else {
         s.chars()
             .skip_while(|c| !opening.contains(c))

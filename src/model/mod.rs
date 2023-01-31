@@ -7,7 +7,10 @@ use indexmap::IndexMap;
 
 pub use self::parse::ParseError;
 use self::statistics::Stats;
-pub use self::{word::{Word, WordHash}, variant::Variant};
+pub use self::{
+    variant::Variant,
+    word::{Word, WordHash},
+};
 
 /// Struct that manages whole logic of trainer.
 pub struct Model {
@@ -21,17 +24,13 @@ impl Model {
     pub fn new() -> (Self, Vec<ParseError>) {
         let data = include_str!("./data.txt");
         let (words, errors) = parse::parse(data);
-        
-        let stats = Stats::new(
-            words
-                .iter()
-                .map(|w| w.hash())
-                .collect()
-        );
-        let words = words.into_iter()
+
+        let stats = Stats::new(words.iter().map(|w| w.hash()).collect());
+        let words = words
+            .into_iter()
             .map(|word| (WordHash::from(&word), word))
             .collect();
-        
+
         let model = Model {
             stats,
             latest: None,
@@ -61,7 +60,8 @@ impl Model {
             Some(group) => group,
             None => return Vec::new(),
         };
-        self.words.values()
+        self.words
+            .values()
             .filter(|w| w.group.map(|g| g == group).unwrap_or(false))
             .cloned()
             .filter(|w| w != word)
@@ -74,8 +74,13 @@ impl Model {
             Some(group) => group,
             None => return Vec::new(),
         };
-        self.words.values()
-            .filter(|w| w.group.map(|g| g.0 == !group.0 && g.1 == group.1).unwrap_or(false))
+        self.words
+            .values()
+            .filter(|w| {
+                w.group
+                    .map(|g| g.0 == !group.0 && g.1 == group.1)
+                    .unwrap_or(false)
+            })
             .cloned()
             .filter(|w| w != word)
             .collect()

@@ -1,6 +1,6 @@
-use std::{fmt::Display, hash::Hash, str::FromStr, num::ParseIntError};
+use std::{fmt::Display, hash::Hash, num::ParseIntError, str::FromStr};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::util;
 
@@ -35,12 +35,12 @@ impl Word {
             explanation: None,
         }
     }
-    
+
     pub fn with_detail(mut self, detail: &str) -> Self {
         self.detail = Some(detail.trim().to_string());
         self
     }
-    
+
     pub fn with_group(mut self, group: &str, inverted: bool) -> Self {
         self.group = Some((inverted, fxhash::hash64(&group.to_lowercase())));
         self

@@ -1,24 +1,21 @@
 use chrono::{DateTime, Utc};
-use gloo::storage::{LocalStorage, Storage, errors::StorageError};
+use gloo::storage::{errors::StorageError, LocalStorage, Storage};
 use indexmap::IndexMap;
 use rand::seq::IteratorRandom;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use super::{WordHash, CardResult};
+use super::{CardResult, WordHash};
 
 /// Stats struct stores mapping between word and its progression.
 pub struct Stats(IndexMap<WordHash, Record>);
-
-
 
 impl Stats {
     const KEY: &'static str = "words-stats";
 
     pub fn new(words: Vec<WordHash>) -> Self {
-        let new: IndexMap<WordHash, Record> = words.into_iter()
-            .map(|h| { (h, Record::default()) })
-            .collect();
+        let new: IndexMap<WordHash, Record> =
+            words.into_iter().map(|h| (h, Record::default())).collect();
         let mut new = Stats(new);
         new.sync();
         new
@@ -31,13 +28,15 @@ impl Stats {
             Err(StorageError::KeyNotFound(_) | StorageError::SerdeError(_)) => {
                 let map = IndexMap::new();
                 match LocalStorage::set(Self::KEY, &map) {
-                    Err(StorageError::JsError(e)) => gloo::console::error!(format!("LocalStorage is not functional {e}")),
+                    Err(StorageError::JsError(e)) => {
+                        gloo::console::error!(format!("LocalStorage is not functional {e}"))
+                    }
                     Err(StorageError::SerdeError(_)) => unreachable!(),
                     Err(StorageError::KeyNotFound(_)) => unreachable!(),
                     _ => (),
                 }
                 map
-            },
+            }
             Err(StorageError::JsError(e)) => panic!("JS error occured: {}", e),
         };
         Stats(stored)
@@ -78,7 +77,7 @@ impl Stats {
         self.0 = stored;
 
         match LocalStorage::set(Self::KEY, &self.0) {
-            Ok(_) => { },
+            Ok(_) => {}
             Err(StorageError::KeyNotFound(_)) => unreachable!(),
             Err(StorageError::SerdeError(e)) => panic!("Serde error occured: {}", e),
             Err(StorageError::JsError(e)) => panic!("JS error occured: {}", e),
@@ -106,7 +105,10 @@ struct Record {
 impl Record {
     /// Create new record.
     pub fn new() -> Self {
-        Self { last_occured: None, group: Group::new() }
+        Self {
+            last_occured: None,
+            group: Group::new(),
+        }
     }
     /// Update inner timer of record.
     pub fn occured(&mut self) {

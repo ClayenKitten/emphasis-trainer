@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use gloo::console;
 use gloo::timers::callback::Interval;
-use model::{Model, Variant, Word, ParseError, CardResult};
+use model::{CardResult, Model, ParseError, Variant, Word};
 use question::QuestionCard;
 use yew::prelude::*;
 
@@ -103,7 +103,12 @@ impl Component for App {
                 } else {
                     (Vec::new(), Vec::new())
                 };
-                let props = FailureProperties { callback, word, seealso, opposite };
+                let props = FailureProperties {
+                    callback,
+                    word,
+                    seealso,
+                    opposite,
+                };
                 html!(<FailureCard ..props/>)
             }
         };
